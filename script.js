@@ -63,13 +63,50 @@ function getImg(map, name) {
   return name === NONE_LABEL ? null : map[name];
 }
 
+// Saved outfits persist in localStorage so a refresh doesn't wipe them.
+const STORAGE_KEY = "closet.savedOutfits";
+
+function isValidOutfit(o) {
+  return (
+    o &&
+    typeof o.key === "string" &&
+    TOP_NAMES.includes(o.top) &&
+    BOTTOM_NAMES.includes(o.bottom) &&
+    OUTER_NAMES.includes(o.outer) &&
+    SHOE_NAMES.includes(o.shoe)
+  );
+}
+
+function loadSavedOutfits() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    // drop anything that doesn't match the current item lists, in case
+    // the wardrobe changed since this was saved
+    return Array.isArray(parsed) ? parsed.filter(isValidOutfit) : [];
+  } catch (err) {
+    // storage can be unavailable (private browsing, disabled, corrupt
+    // JSON, etc.) — fall back to an empty list instead of breaking the app
+    return [];
+  }
+}
+
+function persistSavedOutfits() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.saved));
+  } catch (err) {
+    // ignore: nothing useful we can do if storage is unavailable/full
+  }
+}
+
 const state = {
   topIdx: 0,
   bottomIdx: 0,
   outerIdx: 0,
   shoeIdx: 1,
   active: "top", // which category the canvas swipe currently controls
-  saved: [],
+  saved: loadSavedOutfits(),
 };
 
 // direction of the most recent swipe/arrow action, used to pick a
@@ -359,6 +396,7 @@ function saveOutfit() {
   const isDuplicate = state.saved.some((o) => o.top === outfit.top && o.bottom === outfit.bottom);
   if (isDuplicate) return;
   state.saved = [outfit, ...state.saved].slice(0, 6);
+  persistSavedOutfits();
   render();
 }
 
@@ -377,6 +415,7 @@ function loadOutfit(outfit) {
 // Removes a saved outfit (triggered by its hover delete button).
 function deleteOutfit(key) {
   state.saved = state.saved.filter((o) => o.key !== key);
+  persistSavedOutfits();
   render();
 }
 
