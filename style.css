@@ -1,0 +1,414 @@
+:root {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --fg: #1a1a1a;
+  --muted: #8a8a86;
+  --border: #e4e2dd;
+  --accent: #1a1a1a;
+  --accent-fg: #fff6f6;
+  --radius: 0;
+  --radius-lg: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  /* all on-page copy renders in caps; the underlying strings in script.js
+     stay normal-case since they're also used as data (image lookups,
+     aria-labels), so this is purely visual */
+  text-transform: uppercase;
+}
+
+.closet-app {
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 32px 16px 64px;
+}
+
+/* header */
+.closet-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.closet-title {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.closet-subtitle {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* canvas: one big swipeable stage per active category */
+.closet-canvas {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--surface);
+  padding: 8px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.closet-canvas-arrow {
+  position: absolute;
+  top: 44%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--fg);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.closet-canvas-arrow:hover {
+  background: var(--surface);
+  border-color: var(--fg);
+}
+
+.closet-canvas-arrow-prev {
+  left: 10px;
+}
+
+.closet-canvas-arrow-next {
+  right: 10px;
+}
+
+.closet-canvas-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 420px;
+  padding: 28px 44px 48px;
+  touch-action: pan-y;
+  user-select: none;
+  cursor: grab;
+}
+
+.closet-canvas-stage:active {
+  cursor: grabbing;
+}
+
+.closet-canvas-stage img {
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.closet-canvas-outer-img {
+  max-width: 60%;
+  max-height: 130px;
+  object-fit: contain;
+}
+
+.closet-canvas-top-img {
+  max-width: 80%;
+  max-height: 150px;
+  object-fit: contain;
+  margin-top: 6px;
+}
+
+.closet-canvas-bottom-img {
+  max-width: 58%;
+  max-height: 220px;
+  object-fit: contain;
+  margin-top: -10px;
+}
+
+.closet-canvas-shoe-img {
+  max-width: 30%;
+  max-height: 70px;
+  object-fit: contain;
+  margin-top: 4px;
+}
+
+.closet-canvas-stage.swipe-next {
+  animation: slideInFromRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.closet-canvas-stage.swipe-prev {
+  animation: slideInFromLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(48px);
+    opacity: 0.3;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-48px);
+    opacity: 0.3;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.closet-canvas-caption {
+  text-align: center;
+  padding: 12px 8px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.closet-canvas-caption-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.closet-canvas-caption-meta {
+  margin-top: 4px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+/* tabs: choose which layer the canvas swipe controls */
+.closet-tabs {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--surface);
+  margin-bottom: 24px;
+}
+
+/* sliding highlight behind the active tab; position/width are set in JS
+   to match the active button's actual box, then transformed smoothly */
+.closet-tab-indicator {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  background: var(--accent);
+  transition:
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+}
+
+.closet-tab {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  padding: 9px 4px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.closet-tab.is-active {
+  color: var(--accent-fg);
+}
+
+/* actions */
+.closet-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 40px;
+}
+
+.closet-btn {
+  flex: 1 1 0;
+  padding: 13px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 0;
+  cursor: pointer;
+  transition:
+    opacity 0.15s ease,
+    background 0.15s ease;
+  border: 1px solid var(--fg);
+}
+
+.closet-btn-ghost {
+  background: transparent;
+  color: var(--fg);
+}
+
+.closet-btn-ghost:hover {
+  background: var(--bg);
+}
+
+.closet-btn-primary {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.closet-btn-primary:hover {
+  opacity: 0.85;
+}
+
+/* saved */
+.closet-saved-section {
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+}
+
+.closet-saved-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+.closet-saved-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.closet-saved-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  margin: 0;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 10px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.closet-saved-card:hover {
+  border-color: var(--fg);
+}
+
+.closet-saved-card:active {
+  transform: scale(0.98);
+}
+
+/* × delete button: tucked in the top-right corner, hidden until the
+   card is hovered (or focused/touched, so it's still reachable without
+   a mouse) */
+.closet-saved-delete {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.9);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+  z-index: 1;
+}
+
+.closet-saved-card:hover .closet-saved-delete,
+.closet-saved-card:focus-within .closet-saved-delete {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.closet-saved-delete:hover {
+  background: var(--fg);
+  border-color: var(--fg);
+  color: var(--accent-fg);
+}
+
+/* devices without a mouse can't hover, so keep the button reachable */
+@media (hover: none) {
+  .closet-saved-delete {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.closet-saved-card.is-loaded {
+  border-color: var(--fg);
+  border-width: 2px;
+  padding: 9px;
+}
+
+.closet-saved-icons {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.closet-saved-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  padding: 2px;
+}
+
+.closet-saved-label {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* desktop: this app is designed mobile-first, keep the canvas from
+   stretching too wide on larger screens */
+@media (min-width: 640px) {
+  .closet-app {
+    padding-top: 56px;
+  }
+}
